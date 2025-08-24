@@ -3,10 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>공지사항 | SUNHO</title>
-  <meta name="description" content="선호의 공지사항 목록" />
-  <link rel="stylesheet" href="/assets/styles.css" />
+  <title>공지사항 | SUNHO SKY</title>
+  <meta name="description" content="sunho-sky 공지사항 목록" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <meta property="og:title" content="공지사항 | SUNHO SKY" />
+  <meta property="og:description" content="sunho-sky 공지사항 목록" />
+  <meta property="og:image" content="/og-image.png" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://sunho-sky.pages.dev/" />
   <link rel="alternate" type="application/rss+xml" title="RSS" href="/feed.xml" />
+  <!-- Cloudflare Web Analytics 등 추후 스니펫 추가 위치 -->
 </head>
 <body>
   <header class="container">
@@ -33,30 +39,26 @@
 
   <script>
   const state = { all:[], filtered:[], page:1, per:10, tag:null, q:'' };
+  const $ = s=>document.querySelector(s);
+  const esc=s=> (s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+  const dateStr=s=>{const d=new Date(s);return isNaN(d)?s:d.toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'})};
 
-  function esc(s=''){return s.replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
-  function dateStr(s){
-    const d = new Date(s); if(isNaN(d))return s;
-    return d.toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'});
-  }
   function renderTags(){
-    const mount=document.getElementById('tags');
-    const tags = new Set(); state.all.forEach(p=>(p.tags||[]).forEach(t=>tags.add(t)));
+    const mount=$("#tags"); const tags=new Set(); state.all.forEach(p=>(p.tags||[]).forEach(t=>tags.add(t)));
     const all=['전체',...Array.from(tags)];
-    mount.innerHTML = all.map(t=>{
-      const active = (state.tag===null && t==='전체') || (state.tag===t);
-      return `<button data-tag="${esc(t)}" style="margin-right:6px; padding:6px 10px; border:1px solid #e5e7eb; border-radius:9999px; background:${active?'#111':'#fff'}; color:${active?'#fff':'#111'}">${esc(t)}</button>`;
+    mount.innerHTML=all.map(t=>{
+      const active=(state.tag===null&&t==='전체')||(state.tag===t);
+      return `<button data-tag="${esc(t)}" style="margin-right:6px;padding:6px 10px;border:1px solid #e5e7eb;border-radius:9999px;background:${active?'#111':'#fff'};color:${active?'#fff':'#111'}">${esc(t)}</button>`;
     }).join('');
-    mount.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{
-      const v = btn.dataset.tag;
-      state.tag = (v==='전체')? null : v; state.page=1; applyFilter();
-    }));
+    mount.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+      const v=b.dataset.tag; state.tag=(v==='전체')?null:v; state.page=1; applyFilter();
+    });
   }
+
   function renderList(){
-    const mount=document.getElementById('list');
-    const start=(state.page-1)*state.per, end=start+state.per;
-    const pageItems = state.filtered.slice(start,end);
-    mount.innerHTML = pageItems.map(p=>`
+    const mount=$("#list"); const start=(state.page-1)*state.per, end=start+state.per;
+    const pageItems=state.filtered.slice(start,end);
+    mount.innerHTML=pageItems.map(p=>`
       <a class="item" href="/post.html?slug=${encodeURIComponent(p.slug)}">
         <article class="card">
           <h2>${esc(p.title)}</h2>
@@ -66,28 +68,28 @@
         </article>
       </a>
     `).join('') || '<p class="empty">결과가 없습니다.</p>';
-    document.getElementById('pageinfo').textContent = `${state.page} / ${Math.max(1, Math.ceil(state.filtered.length/state.per))}`;
-    document.getElementById('prev').disabled = state.page<=1;
-    document.getElementById('next').disabled = state.page>=Math.ceil(state.filtered.length/state.per);
+    $("#pageinfo").textContent = `${state.page} / ${Math.max(1, Math.ceil(state.filtered.length/state.per))}`;
+    $("#prev").disabled = state.page<=1;
+    $("#next").disabled = state.page>=Math.ceil(state.filtered.length/state.per);
   }
+
   function applyFilter(){
     state.filtered = state.all.filter(p=>{
-      const byTag = state.tag? (p.tags||[]).includes(state.tag) : true;
-      const q = state.q.toLowerCase();
-      const byQ = !q || (p.title||'').toLowerCase().includes(q) || (p.excerpt||'').toLowerCase().includes(q);
+      const byTag=state.tag? (p.tags||[]).includes(state.tag):true;
+      const q=(state.q||'').toLowerCase();
+      const byQ=!q || (p.title||'').toLowerCase().includes(q) || (p.excerpt||'').toLowerCase().includes(q);
       return byTag && byQ;
-    }).sort((a,b)=> new Date(b.date) - new Date(a.date));
-    renderList();
-    renderTags();
+    }).sort((a,b)=> new Date(b.date)-new Date(a.date));
+    renderList(); renderTags();
   }
+
   async function boot(){
-    const res = await fetch('/posts.json', {cache:'no-store'});
-    state.all = await res.json();
+    const res = await fetch('/posts.json',{cache:'no-store'}); state.all = await res.json();
     applyFilter();
-    document.getElementById('year').textContent = new Date().getFullYear();
-    document.getElementById('q').addEventListener('input', e=>{state.q=e.target.value; state.page=1; applyFilter();});
-    document.getElementById('prev').addEventListener('click', ()=>{if(state.page>1){state.page--; renderList();}});
-    document.getElementById('next').addEventListener('click', ()=>{const max=Math.ceil(state.filtered.length/state.per); if(state.page<max){state.page++; renderList();}});
+    $("#year").textContent=new Date().getFullYear();
+    $("#q").oninput=e=>{state.q=e.target.value; state.page=1; applyFilter();};
+    $("#prev").onclick=()=>{if(state.page>1){state.page--; renderList();}};
+    $("#next").onclick=()=>{const max=Math.ceil(state.filtered.length/state.per); if(state.page<max){state.page++; renderList();}};
   }
   boot();
   </script>

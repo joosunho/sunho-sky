@@ -4,7 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>공지사항 | 상세</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="/assets/styles.css" />
+  <meta property="og:image" content="/og-image.png" />
 </head>
 <body>
   <header class="container">
@@ -17,26 +19,19 @@
   </footer>
 
 <script>
-function esc(s=''){return s.replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
-function md(s=''){
-  return esc(s)
-    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
-    .replace(/\n\n/g,'</p><p>')
-    .replace(/\n/g,'<br>')
-    .replace(/\[(.+?)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
-}
-function dateStr(s){
-  const d=new Date(s); if(isNaN(d))return s;
-  return d.toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'});
-}
+const $=s=>document.querySelector(s);
+const esc=s=>(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const dateStr=s=>{const d=new Date(s);return isNaN(d)?s:d.toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'})};
+function md(s=''){return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>').replace(/\[(.+?)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');}
+
 async function boot(){
-  document.getElementById('year').textContent = new Date().getFullYear();
-  const url=new URL(location.href); const slug=url.searchParams.get('slug');
-  const list = await (await fetch('/posts.json',{cache:'no-store'})).json();
-  const item = list.find(x=>x.slug===slug);
-  const mount=document.getElementById('post');
-  if(!item){ mount.innerHTML='<p class="empty">게시글을 찾을 수 없습니다.</p>'; return; }
-  const mdtxt = await (await fetch(item.path,{cache:'no-store'})).text();
+  $("#year").textContent=new Date().getFullYear();
+  const slug=new URL(location.href).searchParams.get('slug');
+  const list=await (await fetch('/posts.json',{cache:'no-store'})).json();
+  const item=list.find(x=>x.slug===slug);
+  const mount=$("#post");
+  if(!item){ mount.innerHTML='<p class="empty">게시글을 찾을 수 없습니다.</p>'; return;}
+  const mdtxt=await (await fetch(item.path,{cache:'no-store'})).text();
   mount.innerHTML = `
     <h2 class="title">${esc(item.title)}</h2>
     <div class="meta">${dateStr(item.date)} · ${esc(item.author||'운영자')}

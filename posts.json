@@ -8,18 +8,7 @@
       "안내",
       "업데이트"
     ],
-    "excerpt": "Cloudflare Pages로 공지 사이트를 오픈했습니다. 앞으로 이곳에서 소식을 전달드릴게요.",
+    "excerpt": "Cloudflare Pages로 공지 사이트를 오픈했습니다.",
     "path": "/posts/welcome.md"
-  },
-  {
-    "slug": "maintenance-aug",
-    "title": "점검 안내 (8월)",
-    "date": "2025-08-21",
-    "author": "운영자",
-    "tags": [
-      "점검"
-    ],
-    "excerpt": "8월 말 새벽 한 시간 정도 점검이 예정되어 있습니다.",
-    "path": "/posts/maintenance-aug.md"
   }
 ]
