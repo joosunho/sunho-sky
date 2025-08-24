@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+  <title>공지사항 | SUNHO</title>
+  <link>https://example.pages.dev/</link>
+  <description>선호의 공지 RSS 피드</description>
+  <lastBuildDate>Sun, 24 Aug 2025 14:11:33 +0000</lastBuildDate>
+  
+  <item>
+    <title>공지: 사이트 오픈</title>
+    <link>https://example.pages.dev/post.html?slug=welcome</link>
+    <guid>https://example.pages.dev/post.html?slug=welcome</guid>
+    <pubDate>Sun, 24 Aug 2025 14:11:33 +0000</pubDate>
+    <description><![CDATA[Cloudflare Pages로 공지 사이트를 오픈했습니다. 앞으로 이곳에서 소식을 전달드릴게요.]]></description>
+  </item>
+  <item>
+    <title>점검 안내 (8월)</title>
+    <link>https://example.pages.dev/post.html?slug=maintenance-aug</link>
+    <guid>https://example.pages.dev/post.html?slug=maintenance-aug</guid>
+    <pubDate>Sun, 24 Aug 2025 14:11:33 +0000</pubDate>
+    <description><![CDATA[8월 말 새벽 한 시간 정도 점검이 예정되어 있습니다.]]></description>
+  </item>
+</channel>
+</rss>

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>공지사항 | SUNHO</title>
+  <meta name="description" content="선호의 공지사항 목록" />
+  <link rel="stylesheet" href="/assets/styles.css" />
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/feed.xml" />
+</head>
+<body>
+  <header class="container">
+    <h1>공지사항</h1>
+    <p class="muted">최신 공지부터 보여줍니다. 검색/태그 필터 가능</p>
+    <div class="search-wrap">
+      <input id="q" type="search" placeholder="제목/본문 검색…" aria-label="검색" />
+    </div>
+  </header>
+
+  <main class="container">
+    <section id="tags" class="tags"></section>
+    <section id="list" class="list" aria-live="polite"></section>
+    <nav class="pager">
+      <button id="prev">이전</button>
+      <span id="pageinfo" class="muted"></span>
+      <button id="next">다음</button>
+    </nav>
+  </main>
+
+  <footer class="container footer">
+    <small>© <span id="year"></span> SUNHO</small>
+  </footer>
+
+  <script>
+  const state = { all:[], filtered:[], page:1, per:10, tag:null, q:'' };
+
+  function esc(s=''){return s.replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+  function dateStr(s){
+    const d = new Date(s); if(isNaN(d))return s;
+    return d.toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'});
+  }
+  function renderTags(){
+    const mount=document.getElementById('tags');
+    const tags = new Set(); state.all.forEach(p=>(p.tags||[]).forEach(t=>tags.add(t)));
+    const all=['전체',...Array.from(tags)];
+    mount.innerHTML = all.map(t=>{
+      const active = (state.tag===null && t==='전체') || (state.tag===t);
+      return `<button data-tag="${esc(t)}" style="margin-right:6px; padding:6px 10px; border:1px solid #e5e7eb; border-radius:9999px; background:${active?'#111':'#fff'}; color:${active?'#fff':'#111'}">${esc(t)}</button>`;
+    }).join('');
+    mount.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{
+      const v = btn.dataset.tag;
+      state.tag = (v==='전체')? null : v; state.page=1; applyFilter();
+    }));
+  }
+  function renderList(){
+    const mount=document.getElementById('list');
+    const start=(state.page-1)*state.per, end=start+state.per;
+    const pageItems = state.filtered.slice(start,end);
+    mount.innerHTML = pageItems.map(p=>`
+      <a class="item" href="/post.html?slug=${encodeURIComponent(p.slug)}">
+        <article class="card">
+          <h2>${esc(p.title)}</h2>
+          <div class="meta">${dateStr(p.date)} · ${esc(p.author||'운영자')}</div>
+          <div class="muted">${esc(p.excerpt||'')}</div>
+          ${(p.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}
+        </article>
+      </a>
+    `).join('') || '<p class="empty">결과가 없습니다.</p>';
+    document.getElementById('pageinfo').textContent = `${state.page} / ${Math.max(1, Math.ceil(state.filtered.length/state.per))}`;
+    document.getElementById('prev').disabled = state.page<=1;
+    document.getElementById('next').disabled = state.page>=Math.ceil(state.filtered.length/state.per);
+  }
+  function applyFilter(){
+    state.filtered = state.all.filter(p=>{
+      const byTag = state.tag? (p.tags||[]).includes(state.tag) : true;
+      const q = state.q.toLowerCase();
+      const byQ = !q || (p.title||'').toLowerCase().includes(q) || (p.excerpt||'').toLowerCase().includes(q);
+      return byTag && byQ;
+    }).sort((a,b)=> new Date(b.date) - new Date(a.date));
+    renderList();
+    renderTags();
+  }
+  async function boot(){
+    const res = await fetch('/posts.json', {cache:'no-store'});
+    state.all = await res.json();
+    applyFilter();
+    document.getElementById('year').textContent = new Date().getFullYear();
+    document.getElementById('q').addEventListener('input', e=>{state.q=e.target.value; state.page=1; applyFilter();});
+    document.getElementById('prev').addEventListener('click', ()=>{if(state.page>1){state.page--; renderList();}});
+    document.getElementById('next').addEventListener('click', ()=>{const max=Math.ceil(state.filtered.length/state.per); if(state.page<max){state.page++; renderList();}});
+  }
+  boot();
+  </script>
+</body>
+</html>
